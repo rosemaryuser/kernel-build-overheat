@@ -6,7 +6,7 @@ on:
       KERNEL_REPO:
         description: 'KERNEL_REPO'
         required: true
-        default: 'https://github.com/zainarbani/kernel-mtk'
+        default: 'https://github.com/rosemaryuser/kernel-rosemary'
       KERNEL_BRANCH:
         description: 'KERNEL_BRANCH'
         required: true
@@ -19,6 +19,10 @@ on:
         description: 'KERNEL_HOTFIX'
         required: false
         default: 'N/A'
+      maintainer_name:
+        description: 'your name'
+        required: true
+        default: 'nobody'
 
 jobs:
   build:
@@ -49,11 +53,17 @@ jobs:
         git clone -b ${{ github.event.inputs.KERNEL_BRANCH }} ${{ github.event.inputs.KERNEL_REPO }} linux --recurse-submodules --depth=1 &> /dev/null
         git clone -b master https://github.com/zainarbani/AnyKernel3 AnyKernel3 --depth=1 &> /dev/null
 
+    # Set swap space 
+    - name: 📐 Set swap to 12GB
+      uses: pierotofy/set-swap-space@master
+      with:
+          swap-size-gb: 12   
+
     - name: Building Kernel
       run: |
         cd $GITHUB_WORKSPACE/project/linux
         PATH=$GITHUB_WORKSPACE/project/clang/bin:$PATH
-        export TZ="Asia/Jakarta"
+        export TZ="Asia/Kuala Lumpur"
         export DATE=$(date "+%Y%m%d-%H%M")
         echo "BUILD_DATE=$(date "+%Y%m%d%H%M")" >> $GITHUB_ENV
         echo "KERNEL_VER=$(make kernelversion)" >> $GITHUB_ENV
@@ -78,24 +88,22 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/project/AnyKernel3
         cp $GITHUB_WORKSPACE/project/Image.gz-dtb Image.gz-dtb
-        zip -r9 $GITHUB_WORKSPACE/project/OverHeat-dev.zip -- *
+        zip -r9 $GITHUB_WORKSPACE/project/OverHeat-rosemary.zip -- *
         cp $GITHUB_WORKSPACE/project/Image.gz-dtb-ksu Image.gz-dtb
-        zip -r9 $GITHUB_WORKSPACE/project/OverHeat-dev-ksu.zip -- *
+        zip -r9 $GITHUB_WORKSPACE/project/OverHeat-rosemary-ksu.zip -- *
         
     - name: Upload Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: |
-          ${{ github.workspace }}/project/OverHeat-dev.zip
-          ${{ github.workspace }}/project/OverHeat-dev-ksu.zip
+          ${{ github.workspace }}/project/OverHeat-rosemary-${{ env.KERNEL_VER }}.zip
+          ${{ github.workspace }}/project/OverHeat-rosemary-ksu-${{ env.KERNEL_VER }}.zip
         name: OverHeat-${{ env.BUILD_DATE }}
         tag_name: ${{ env.BUILD_DATE }}
         body: |
           Repo: ${{ github.event.inputs.KERNEL_REPO }}
           Branch: ${{ github.event.inputs.KERNEL_BRANCH }}
           Config: ${{ github.event.inputs.KERNEL_DEFCONFIG }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Update TG
       uses: appleboy/telegram-action@master
@@ -106,17 +114,18 @@ jobs:
         disable_web_page_preview: true
         message: |
           <b>OverHeat-Kernel Update</b>
-
           <b>Build Date: </b>${{ env.BUILD_DATE }}
           
           <a href="https://github.com/${{ github.repository }}/releases/tag/${{ env.BUILD_DATE }}">Download</a>
           
-          <a href="${{ github.event.inputs.KERNEL_REPO }}/commits/${{ github.event.inputs.KERNEL_BRANCH }}">Changelogs</a>
-
-          <b>Hotfix:</b>
+          <b>ChangeLogs:</b>  
           ${{ github.event.inputs.KERNEL_HOTFIX }}
-
+          
           <b>Config: </b>${{ github.event.inputs.KERNEL_DEFCONFIG }}
           <b>Kernel Ver: </b>${{ env.KERNEL_VER }}
           <b>Clang Ver: </b>${{ env.CLANG_VER }}
-          <b>Maintainer: </b>@AnotherZain
+          <b>Maintainer: </b>${{ github.event.inputs.maintainer_name }}
+        document: |
+          ${{ github.workspace }}/project/OverHeat-rosemary-${{ env.KERNEL_VER }}.zip
+          ${{ github.workspace }}/project/OverHeat-dev-rosemary-${{ env.KERNEL_VER }}.zip
+          
