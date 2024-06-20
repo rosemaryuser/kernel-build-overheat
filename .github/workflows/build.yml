@@ -113,18 +113,19 @@ jobs:
         format: html
         disable_web_page_preview: true
         message: |
+          <b>THIS IS ONLY FOR S VENDOR<b>
           <b>OverHeat-Kernel Update</b>
           <b>Build Date: </b>${{ env.BUILD_DATE }}
+          <b>Config: </b>${{ github.event.inputs.KERNEL_DEFCONFIG }}
+          <b>Kernel Ver: </b>${{ env.KERNEL_VER }}
+          <b>Clang Ver: </b>${{ env.CLANG_VER }}
+          <b>Maintainer: </b>${{ github.event.inputs.maintainer_name }}
           
           <a href="https://github.com/${{ github.repository }}/releases/tag/${{ env.BUILD_DATE }}">Download</a>
           
           <b>ChangeLogs:</b>  
           ${{ github.event.inputs.KERNEL_HOTFIX }}
           
-          <b>Config: </b>${{ github.event.inputs.KERNEL_DEFCONFIG }}
-          <b>Kernel Ver: </b>${{ env.KERNEL_VER }}
-          <b>Clang Ver: </b>${{ env.CLANG_VER }}
-          <b>Maintainer: </b>${{ github.event.inputs.maintainer_name }}
         document: |
           ${{ github.workspace }}/project/OverHeat-rosemary-${{ env.KERNEL_VER }}.zip
           ${{ github.workspace }}/project/OverHeat-dev-rosemary-${{ env.KERNEL_VER }}.zip
